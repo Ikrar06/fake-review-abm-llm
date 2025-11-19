@@ -88,6 +88,10 @@ Examples of FAKE language to use:
 - "Five stars!"
 - "Perfect in every way!"
 
+Format output exactly as:
+Review: [text]
+Rating: 5"""
+
 
 # Variasi prompt fake agar tidak semua review isinya sama persis
 FAKE_PROMPT_VARIATIONS = [
