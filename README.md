@@ -1,8 +1,8 @@
-# Fake Review ABM Simulation - Publication-Grade Research
+# Fake Review ABM Simulation
 
 Agent-Based Modeling (ABM) simulation untuk meneliti dampak fake reviews terhadap keputusan pembelian di e-commerce menggunakan Large Language Models (LLM).
 
-**OPTIMAL SETUP**: 7,550 agents, 20 iterations, publication-grade statistical analysis.
+**OPTIMAL SETUP**: 7,550 agents, 20 iterations.
 
 ## Research Questions
 
@@ -35,10 +35,10 @@ fake_review_sim/
 │   ├── prompts.py           # LLM prompt templates (English-only)
 │   ├── products.py          # Product manager
 │   ├── agents.py            # Reviewer & Shopper agents
-│   └── engine.py            # Simulation orchestrator (balanced design)
+│   └── engine.py            # Simulation orchestrator 
 ├── data/                     # Database & analysis outputs
 ├── analysis/                 # Analysis scripts
-│   ├── comprehensive_analysis.py  # RQ1 & RQ2 analysis (NEW)
+│   ├── comprehensive_analysis.py  # RQ1 & RQ2 analysis
 │   └── visualize_results.py       # Simple visualization
 ├── main.py                   # Entry point
 └── requirements.txt          # Dependencies
@@ -285,17 +285,6 @@ del data\simulation.db
 python main.py
 ```
 
-## Publication Checklist
-
-✅ Balanced experimental design (no sampling bias)
-✅ High statistical power (n=400 per group)
-✅ Controlled variables (equal exposure per product)
-✅ Statistical significance tests (Chi-Square, ANOVA)
-✅ Effect size reporting (Cramér's V)
-✅ Confidence intervals (±4.9% at 95%)
-✅ Temporal dynamics (20 iterations)
-✅ Reproducible (fixed seed for shuffle operations)
-✅ Comprehensive documentation
 
 ## License
 
@@ -319,8 +308,4 @@ If you use this work in your research, please cite:
 
 Ikrar - 2025
 
----
 
-**Ready for overnight run!** 🚀
-Expected completion: 4-6 hours
-Final output: Publication-grade analysis with statistical tests
