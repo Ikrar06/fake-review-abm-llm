@@ -172,7 +172,7 @@ REVIEWS_READ = {
 
 ```
 Iteration:  1   2   3   4   5   6   7   8  ...  20
-            |-------|   |-----|   |--------------|
+            |-------|   |---|   |---------------|
             BASELINE    BURST     MAINTENANCE
 
 Baseline (1-3):   Only genuine reviews
@@ -220,4 +220,4 @@ Educational/Research use only.
 
 ## Author
 
-Ikrar - 2025
+Ikrar & Irgi - 2025
