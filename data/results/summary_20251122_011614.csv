@@ -1,0 +1,35 @@
+,value
+total_iterations,20
+total_reviews,1730
+total_fake_reviews,530
+total_transactions,6000
+timestamp,20251122_011614
+product_1_name,SoundMax Pro
+product_1_final_rating,4.36
+product_1_total_reviews,240
+product_1_fake_reviews,0
+product_2_name,AudioBlast Wireless
+product_2_final_rating,3.67
+product_2_total_reviews,240
+product_2_fake_reviews,0
+product_3_name,BudgetBeats
+product_3_final_rating,3.5
+product_3_total_reviews,505
+product_3_fake_reviews,265
+product_4_name,TechWave Elite
+product_4_final_rating,4.71
+product_4_total_reviews,240
+product_4_fake_reviews,0
+product_5_name,ClearSound Basic
+product_5_final_rating,3.65
+product_5_total_reviews,505
+product_5_fake_reviews,265
+impulsive_purchases,1829
+impulsive_total_evaluations,2000
+impulsive_conversion_rate_%,91.45
+careful_purchases,1647
+careful_total_evaluations,2000
+careful_conversion_rate_%,82.35
+skeptical_purchases,1134
+skeptical_total_evaluations,2000
+skeptical_conversion_rate_%,56.7

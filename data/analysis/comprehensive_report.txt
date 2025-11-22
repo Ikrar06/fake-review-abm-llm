@@ -1,0 +1,112 @@
+================================================================================
+COMPREHENSIVE ANALYSIS REPORT
+Fake Review ABM Simulation - MESA Framework
+================================================================================
+Generated: 2025-11-22 01:25:17
+================================================================================
+
+DATASET SUMMARY
+--------------------------------------------------------------------------------
+Total Reviews: 1730
+  - Genuine: 1200
+  - Fake: 530
+Total Transactions: 6000
+  - BUY decisions: 4610
+  - NO_BUY decisions: 1390
+Iterations: 20
+Products: 5
+Personas: 3
+
+
+================================================================================
+RQ1: IMPACT OF FAKE REVIEWS ON CONVERSION RATE
+================================================================================
+
+Product: BudgetBeats (Low)
+--------------------------------------------------------------------------------
+Baseline Conversion:         0.00%
+Burst Conversion:           54.17%
+Post-Burst Conversion:      79.22%
+
+Absolute Increase:         +54.17%
+Relative Increase:         + 0.00%
+
+Statistical Test (Chi-Square):
+  χ² = 121.2971
+  p-value = 0.000000
+  Cramér's V = 0.636
+  Statistically Significant: YES
+  Sample Sizes: Baseline=180, Burst=120
+
+
+Product: ClearSound Basic (Low-Med)
+--------------------------------------------------------------------------------
+Baseline Conversion:         0.00%
+Burst Conversion:           71.67%
+Post-Burst Conversion:      76.22%
+
+Absolute Increase:         +71.67%
+Relative Increase:         + 0.00%
+
+Statistical Test (Chi-Square):
+  χ² = 177.3534
+  p-value = 0.000000
+  Cramér's V = 0.769
+  Statistically Significant: YES
+  Sample Sizes: Baseline=180, Burst=120
+
+
+================================================================================
+RQ2: PERSONA VULNERABILITY TO FAKE REVIEWS
+================================================================================
+
+Vulnerability Ranking (Impact during burst on targeted products):
+--------------------------------------------------------------------------------
+1. Impulsive    Impact: + 75.00% (Baseline: 0.0% → Burst: 75.0%)
+2. Careful      Impact: + 72.50% (Baseline: 0.0% → Burst: 72.5%)
+3. Skeptical    Impact: + 41.25% (Baseline: 0.0% → Burst: 41.2%)
+
+ANOVA Test:
+  F-statistic = 13.3203
+  p-value = 0.000003
+  Significant difference between personas: YES
+
+
+================================================================================
+OVERALL PERSONA BEHAVIOR SUMMARY
+================================================================================
+
+Persona: Impulsive
+--------------------------------------------------------------------------------
+Total Evaluations:          2000
+Total Purchases:            1829
+Overall Conversion:         91.45%
+Baseline Conversion:        60.00%
+Burst Conversion:           90.00%
+Post-Burst Conversion:      97.93%
+Burst Impact:               +30.00%
+
+Persona: Careful
+--------------------------------------------------------------------------------
+Total Evaluations:          2000
+Total Purchases:            1647
+Overall Conversion:         82.35%
+Baseline Conversion:        48.67%
+Burst Conversion:           89.00%
+Post-Burst Conversion:      88.20%
+Burst Impact:               +40.33%
+
+Persona: Skeptical
+--------------------------------------------------------------------------------
+Total Evaluations:          2000
+Total Purchases:            1134
+Overall Conversion:         56.70%
+Baseline Conversion:        36.00%
+Burst Conversion:           65.50%
+Post-Burst Conversion:      59.67%
+Burst Impact:               +29.50%
+
+
+================================================================================
+END OF REPORT
+================================================================================

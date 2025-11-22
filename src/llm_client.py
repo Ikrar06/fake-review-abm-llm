@@ -1,108 +1,172 @@
-# LLM Client wrapper for Ollama API with error handling
+# llm_client.py - Ollama LLM Client
 
 import ollama
 import json
+import time
+from typing import Dict, Tuple
 from src.config import MODEL_NAME, LLM_TIMEOUT, KEEP_ALIVE
 
 
 class LLMClient:
-    """
-    Wrapper class for Ollama LLM interactions
-    Handles both text generation and JSON generation with fallbacks
-    """
+    """LLM client with dynamic context window and automatic retry."""
 
-    def __init__(self):
-        """Initialize LLM client with configuration"""
+    def __init__(self, verbose: bool = False):
         self.model = MODEL_NAME
         self.timeout = LLM_TIMEOUT
+        self.verbose = verbose
+        self.DEFAULT_CONTEXT = 2048
+        self.LARGE_CONTEXT = 4096
+        self.MAX_CONTEXT = 8192
 
-    def generate_text(self, prompt, system_prompt=""):
-        """
-        Generate free-form text (for reviews)
+        if self.verbose:
+            print(f"[LLM] Initialized with model: {self.model}")
 
-        Args:
-            prompt: User prompt
-            system_prompt: System instructions for the LLM
+    def _estimate_tokens(self, text: str) -> int:
+        return len(text) // 4
 
-        Returns:
-            str: Generated text
-        """
+    def _get_optimal_context_size(self, prompt: str, system_prompt: str) -> int:
+        total_text = system_prompt + prompt
+        estimated_tokens = self._estimate_tokens(total_text)
+        estimated_with_buffer = estimated_tokens + 350
+
+        if estimated_with_buffer <= self.DEFAULT_CONTEXT:
+            return self.DEFAULT_CONTEXT
+        elif estimated_with_buffer <= self.LARGE_CONTEXT:
+            return self.LARGE_CONTEXT
+        return self.MAX_CONTEXT
+
+    def generate_text(
+        self,
+        prompt: str,
+        system_prompt: str = "",
+        max_retries: int = 3,
+        temperature: float = 0.6,
+        max_tokens: int = 300,
+    ) -> str:
+        """Generate free-form text (for reviews)."""
+        context_size = self._get_optimal_context_size(prompt, system_prompt)
+
+        for attempt in range(max_retries):
+            try:
+                response = ollama.chat(
+                    model=self.model,
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": prompt}
+                    ],
+                    options={
+                        "num_ctx": context_size,
+                        "num_predict": max_tokens,
+                        "temperature": temperature,
+                        "top_p": 0.9,
+                        "repeat_penalty": 1.1,
+                    },
+                    keep_alive=KEEP_ALIVE
+                )
+
+                content = response['message']['content'].strip()
+                if not content or len(content) < 10:
+                    raise ValueError("Generated content too short")
+                return content
+
+            except Exception as e:
+                error_msg = str(e)
+                if "context" in error_msg.lower() or "length" in error_msg.lower():
+                    if context_size < self.MAX_CONTEXT:
+                        context_size = self.MAX_CONTEXT
+                    else:
+                        return self._generate_fallback_review()
+
+                if attempt < max_retries - 1:
+                    time.sleep(2 ** attempt)
+                else:
+                    return self._generate_fallback_review()
+
+    def generate_json(
+        self,
+        prompt: str,
+        system_prompt: str = "",
+        max_retries: int = 3,
+        temperature: float = 0.3,
+    ) -> Dict:
+        """Generate structured JSON (for shopper decisions)."""
+        context_size = self._get_optimal_context_size(prompt, system_prompt)
+
+        for attempt in range(max_retries):
+            try:
+                response = ollama.chat(
+                    model=self.model,
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": prompt}
+                    ],
+                    format='json',
+                    options={
+                        "num_ctx": context_size,
+                        "num_predict": 250,
+                        "temperature": temperature,
+                        "top_p": 0.9,
+                    },
+                    keep_alive=KEEP_ALIVE
+                )
+
+                content = response['message']['content'].strip()
+                parsed = json.loads(content)
+                return self._validate_decision_json(parsed)
+
+            except json.JSONDecodeError:
+                if attempt < max_retries - 1:
+                    time.sleep(1)
+                else:
+                    return self._generate_fallback_decision()
+
+            except Exception as e:
+                error_msg = str(e)
+                if "context" in error_msg.lower() or "length" in error_msg.lower():
+                    if context_size < self.MAX_CONTEXT:
+                        context_size = self.MAX_CONTEXT
+                    else:
+                        return self._generate_fallback_decision()
+
+                if attempt < max_retries - 1:
+                    time.sleep(2 ** attempt)
+                else:
+                    return self._generate_fallback_decision()
+
+    def _validate_decision_json(self, data: Dict) -> Dict:
+        if "decision" not in data:
+            data["decision"] = "NO_BUY"
+        if "reasoning" not in data:
+            data["reasoning"] = "No reasoning provided"
+
+        decision_upper = str(data["decision"]).upper()
+        if decision_upper not in ["BUY", "NO_BUY"]:
+            reasoning_lower = data.get("reasoning", "").lower()
+            if any(word in reasoning_lower for word in ["buy", "purchase", "worth"]):
+                data["decision"] = "BUY"
+            else:
+                data["decision"] = "NO_BUY"
+        else:
+            data["decision"] = decision_upper
+
+        return data
+
+    def _generate_fallback_review(self) -> str:
+        return "Review: Product has acceptable quality for the price.\nRating: 3"
+
+    def _generate_fallback_decision(self) -> Dict:
+        return {"decision": "NO_BUY", "reasoning": "Unable to evaluate product."}
+
+    def test_connection(self) -> Tuple[bool, str]:
         try:
             response = ollama.chat(
                 model=self.model,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": prompt}
-                ],
-                options={
-                    "temperature": 0.7,
-                    "num_predict": 150,  # Max tokens
-                },
-                keep_alive=KEEP_ALIVE  # Keep model in VRAM
+                messages=[{"role": "user", "content": "Respond with OK"}],
+                options={"num_predict": 10}
             )
-            return response['message']['content'].strip()
-
+            content = response['message']['content'].strip()
+            if content:
+                return True, f"Connected to '{self.model}'"
+            return False, f"Model '{self.model}' returned empty response"
         except Exception as e:
-            print(f"[LLM ERROR - Text Generation] {e}")
-            # Fallback response
-            return "Product is okay. 3/5 stars."
-
-    def generate_json(self, prompt, system_prompt=""):
-        """
-        Generate structured JSON (for shopper decisions)
-
-        Args:
-            prompt: User prompt
-            system_prompt: System instructions for the LLM
-
-        Returns:
-            dict: Parsed JSON or default fallback
-        """
-        try:
-            response = ollama.chat(
-                model=self.model,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": prompt}
-                ],
-                format='json',  # Force JSON output
-                options={
-                    "temperature": 0.5,  # Lower temp for structured output
-                },
-                keep_alive=KEEP_ALIVE  # Keep model in VRAM
-            )
-
-            content = response['message']['content']
-            return json.loads(content)
-
-        except json.JSONDecodeError as e:
-            print(f"[LLM ERROR - JSON Parse Failed] {e}")
-            # Return default decision
-            return {
-                "decision": "NO_BUY",
-                "reasoning": "Unable to evaluate product properly."
-            }
-
-        except Exception as e:
-            print(f"[LLM ERROR - JSON Generation] {e}")
-            return {
-                "decision": "NO_BUY",
-                "reasoning": "System error occurred."
-            }
-
-    def test_connection(self):
-        """
-        Test if Ollama is accessible and responding
-
-        Returns:
-            bool: True if connection successful, False otherwise
-        """
-        try:
-            response = ollama.chat(
-                model=self.model,
-                messages=[{"role": "user", "content": "Say OK"}],
-                options={"num_predict": 5}
-            )
-            return True
-        except:
-            return False
+            return False, f"Connection failed: {e}"
