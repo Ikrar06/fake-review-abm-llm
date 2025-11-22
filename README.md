@@ -42,7 +42,6 @@ fake_review_sim/
 │   └── publication/       # Figures & tables
 ├── main.py                # Entry point
 ├── requirements.txt
-├── PAPER_GUIDE.md         # Paper writing guide
 └── README.md
 ```
 
