@@ -29,13 +29,19 @@ class CSVAnalyzer:
     - Temporal dynamics of rating manipulation
     """
 
-    def __init__(self, results_dir: str = "data/results"):
+    def __init__(self, results_dir: str = None):
         """
         Initialize analyzer
 
         Args:
-            results_dir: Directory containing CSV exports
+            results_dir: Directory containing CSV exports (auto-detect if None)
         """
+        # Auto-detect project root
+        if results_dir is None:
+            script_dir = Path(__file__).parent
+            project_root = script_dir.parent
+            results_dir = project_root / "data" / "results"
+
         self.results_dir = Path(results_dir)
         self.reviews_df = None
         self.transactions_df = None
@@ -79,10 +85,10 @@ class CSVAnalyzer:
         if metrics_files:
             self.metrics_df = pd.read_csv(metrics_files[-1], index_col=0)
 
-        print(f"  ✓ Reviews: {len(self.reviews_df)} records")
-        print(f"  ✓ Transactions: {len(self.transactions_df)} records")
+        print(f"  [OK] Reviews: {len(self.reviews_df)} records")
+        print(f"  [OK] Transactions: {len(self.transactions_df)} records")
         if self.metrics_df is not None:
-            print(f"  ✓ Metrics: {len(self.metrics_df)} iterations")
+            print(f"  [OK] Metrics: {len(self.metrics_df)} iterations")
 
         # Data validation
         self._validate_data()
@@ -100,7 +106,7 @@ class CSVAnalyzer:
             if col not in self.transactions_df.columns:
                 raise ValueError(f"Missing column in transactions: {col}")
 
-        print("  ✓ Data validation passed")
+        print("  [OK] Data validation passed")
 
     def analyze_purchases_per_persona_product_iteration(self):
         """
@@ -142,7 +148,7 @@ class CSVAnalyzer:
         output_path = self.results_dir.parent / "analysis" / "purchases_detailed.csv"
         output_path.parent.mkdir(parents=True, exist_ok=True)
         df.to_csv(output_path, index=False, encoding='utf-8')
-        print(f"  ✓ Saved detailed purchases to: {output_path}")
+        print(f"  [OK] Saved detailed purchases to: {output_path}")
 
         return df
 
@@ -196,7 +202,7 @@ class CSVAnalyzer:
         # Save
         output_path = self.results_dir.parent / "analysis" / "persona_summary.csv"
         df.to_csv(output_path, index=False)
-        print(f"  ✓ Saved persona summary to: {output_path}")
+        print(f"  [OK] Saved persona summary to: {output_path}")
 
         return df
 
@@ -247,7 +253,7 @@ class CSVAnalyzer:
 
             chi2, p_value, dof, expected = stats.chi2_contingency(contingency_table)
 
-            # Cramér's V (effect size)
+            # Cramer's V (effect size)
             n = baseline_buy + baseline_nobuy + burst_buy + burst_nobuy
             cramers_v = np.sqrt(chi2 / n) if n > 0 else 0
 
@@ -270,14 +276,14 @@ class CSVAnalyzer:
             print(f"    Baseline: {baseline_conv:.1f}%")
             print(f"    Burst: {burst_conv:.1f}%")
             print(f"    Increase: +{burst_conv - baseline_conv:.1f}%")
-            print(f"    Chi-Square: χ²={chi2:.2f}, p={p_value:.4f} {'***' if p_value < 0.001 else ''}")
-            print(f"    Effect Size (Cramér's V): {cramers_v:.3f}")
+            print(f"    Chi-Square: X^2={chi2:.2f}, p={p_value:.4f} {'***' if p_value < 0.001 else ''}")
+            print(f"    Effect Size (Cramer's V): {cramers_v:.3f}")
 
         # Save
         df = pd.DataFrame(results).T
         output_path = self.results_dir.parent / "analysis" / "rq1_results.csv"
         df.to_csv(output_path, encoding='utf-8')
-        print(f"\n  ✓ Saved RQ1 results to: {output_path}")
+        print(f"\n  [OK] Saved RQ1 results to: {output_path}")
 
         return results
 
@@ -285,10 +291,20 @@ class CSVAnalyzer:
         """
         RQ2: Which persona is most vulnerable to fake reviews?
 
+        Analysis scope:
+        - Only TARGETED products (BudgetBeats, ClearSound Basic)
+        - Baseline: iterations 1-3 (before attack)
+        - Attack: iterations 4-20 (burst + maintenance)
+
         Returns:
             dict with ANOVA results
         """
         print("\n[5] RQ2 Analysis: Persona Vulnerability Comparison...")
+        print("    Scope: Targeted products only (BudgetBeats, ClearSound Basic)")
+
+        # Define periods
+        baseline_iterations = [1, 2, 3]
+        attack_iterations = list(range(4, 21))  # burst + maintenance
 
         # Calculate per-persona impact on targeted products
         persona_impacts = []
@@ -299,47 +315,51 @@ class CSVAnalyzer:
                 (self.transactions_df['product_id'].isin(self.fake_targets))
             ]
 
-            baseline = persona_data[~persona_data['iteration'].isin(
-                self.burst_iterations + list(range(max(self.burst_iterations)+1, 21))
-            )]
-            burst = persona_data[persona_data['iteration'].isin(self.burst_iterations)]
+            baseline = persona_data[persona_data['iteration'].isin(baseline_iterations)]
+            attack = persona_data[persona_data['iteration'].isin(attack_iterations)]
 
             baseline_conv = (baseline['decision'] == 'BUY').sum() / len(baseline) * 100 \
                            if len(baseline) > 0 else 0
-            burst_conv = (burst['decision'] == 'BUY').sum() / len(burst) * 100 \
-                        if len(burst) > 0 else 0
+            attack_conv = (attack['decision'] == 'BUY').sum() / len(attack) * 100 \
+                         if len(attack) > 0 else 0
 
-            impact = burst_conv - baseline_conv
+            impact = attack_conv - baseline_conv
 
             persona_impacts.append({
                 'persona': persona,
                 'baseline_conversion_%': round(baseline_conv, 2),
-                'burst_conversion_%': round(burst_conv, 2),
+                'attack_conversion_%': round(attack_conv, 2),
                 'impact_%': round(impact, 2),
-                'sample_size': len(persona_data)
+                'n_baseline': len(baseline),
+                'n_attack': len(attack)
             })
 
         df = pd.DataFrame(persona_impacts).sort_values('impact_%', ascending=False)
 
-        # ANOVA test
+        # ANOVA test using individual decisions during attack period
+        # This gives proper sample size for statistical testing
+        attack_data = self.transactions_df[
+            (self.transactions_df['product_id'].isin(self.fake_targets)) &
+            (self.transactions_df['iteration'].isin(attack_iterations))
+        ].copy()
+        attack_data['buy_numeric'] = (attack_data['decision'] == 'BUY').astype(int)
+
         groups = []
+        group_sizes = []
         for persona in self.personas:
-            persona_data = self.transactions_df[
-                (self.transactions_df['persona'] == persona) &
-                (self.transactions_df['product_id'].isin(self.fake_targets)) &
-                (self.transactions_df['iteration'].isin(self.burst_iterations))
-            ]
-            persona_data['buy_numeric'] = (persona_data['decision'] == 'BUY').astype(int)
-            groups.append(persona_data['buy_numeric'].values)
+            persona_decisions = attack_data[attack_data['persona'] == persona]['buy_numeric'].values
+            groups.append(persona_decisions)
+            group_sizes.append(len(persona_decisions))
 
         f_stat, p_value = stats.f_oneway(*groups)
 
-        print(f"\n  Vulnerability Ranking (by impact during burst):")
+        print(f"\n  Vulnerability Ranking (by impact during attack on targeted products):")
         for idx, row in df.iterrows():
-            print(f"    {row['persona']:12} Impact: +{row['impact_%']:>6.2f}% "
-                  f"(Baseline: {row['baseline_conversion_%']:.1f}% → Burst: {row['burst_conversion_%']:.1f}%)")
+            print(f"    {row['persona']:12} Impact: +{row['impact_%']:>6.2f}pp "
+                  f"(Baseline: {row['baseline_conversion_%']:.1f}% -> Attack: {row['attack_conversion_%']:.1f}%)")
 
-        print(f"\n  ANOVA Test:")
+        print(f"\n  ANOVA Test (comparing conversion rates during attack period):")
+        print(f"    Sample sizes: Impulsive={group_sizes[0]}, Careful={group_sizes[1]}, Skeptical={group_sizes[2]}")
         print(f"    F-statistic: {f_stat:.4f}")
         print(f"    p-value: {p_value:.4f} {'***' if p_value < 0.001 else '**' if p_value < 0.01 else '*' if p_value < 0.05 else ''}")
         print(f"    Significant difference: {'YES' if p_value < 0.05 else 'NO'}")
@@ -347,12 +367,13 @@ class CSVAnalyzer:
         # Save
         output_path = self.results_dir.parent / "analysis" / "rq2_results.csv"
         df.to_csv(output_path, index=False)
-        print(f"\n  ✓ Saved RQ2 results to: {output_path}")
+        print(f"\n  [OK] Saved RQ2 results to: {output_path}")
 
         return {
             'persona_impacts': df.to_dict('records'),
             'anova_f_stat': f_stat,
-            'anova_p_value': p_value
+            'anova_p_value': p_value,
+            'sample_sizes': dict(zip(self.personas, group_sizes))
         }
 
     def visualize_temporal_dynamics(self, detailed_df):
@@ -496,7 +517,7 @@ class CSVAnalyzer:
         # Save
         output_path = self.results_dir.parent / "analysis" / "temporal_dynamics.png"
         plt.savefig(output_path, dpi=300, bbox_inches='tight')
-        print(f"  ✓ Saved temporal dynamics to: {output_path}")
+        print(f"  [OK] Saved temporal dynamics to: {output_path}")
         plt.close()
 
     def visualize_per_persona_breakdown(self, detailed_df):
@@ -646,7 +667,7 @@ class CSVAnalyzer:
             # Save
             output_path = self.results_dir.parent / "analysis" / f"persona_{persona.lower()}_breakdown.png"
             plt.savefig(output_path, dpi=300, bbox_inches='tight')
-            print(f"  ✓ Saved {persona} breakdown to: {output_path}")
+            print(f"  [OK] Saved {persona} breakdown to: {output_path}")
             plt.close()
 
     def generate_text_report(self, rq1_results, rq2_results, persona_summary):
@@ -699,9 +720,9 @@ class CSVAnalyzer:
                 f.write(f"Relative Increase:         +{result['relative_increase_%']:>5.2f}%\n")
                 f.write(f"\n")
                 f.write(f"Statistical Test (Chi-Square):\n")
-                f.write(f"  χ² = {result['chi2_statistic']:.4f}\n")
+                f.write(f"  X^2 = {result['chi2_statistic']:.4f}\n")
                 f.write(f"  p-value = {result['p_value']:.6f}\n")
-                f.write(f"  Cramér's V = {result['cramers_v']:.3f}\n")
+                f.write(f"  Cramer's V = {result['cramers_v']:.3f}\n")
                 f.write(f"  Statistically Significant: {result['significance']}\n")
                 f.write(f"  Sample Sizes: Baseline={result['sample_size_baseline']}, Burst={result['sample_size_burst']}\n")
                 f.write("\n\n")
@@ -711,13 +732,13 @@ class CSVAnalyzer:
             f.write("RQ2: PERSONA VULNERABILITY TO FAKE REVIEWS\n")
             f.write("="*80 + "\n\n")
 
-            f.write("Vulnerability Ranking (Impact during burst on targeted products):\n")
+            f.write("Vulnerability Ranking (Impact during attack on targeted products):\n")
             f.write("-"*80 + "\n")
             for idx, persona_data in enumerate(rq2_results['persona_impacts'], 1):
                 f.write(f"{idx}. {persona_data['persona']:12} "
-                       f"Impact: +{persona_data['impact_%']:>6.2f}% "
-                       f"(Baseline: {persona_data['baseline_conversion_%']:.1f}% → "
-                       f"Burst: {persona_data['burst_conversion_%']:.1f}%)\n")
+                       f"Impact: +{persona_data['impact_%']:>6.2f}pp "
+                       f"(Baseline: {persona_data['baseline_conversion_%']:.1f}% -> "
+                       f"Attack: {persona_data['attack_conversion_%']:.1f}%)\n")
 
             f.write(f"\nANOVA Test:\n")
             f.write(f"  F-statistic = {rq2_results['anova_f_stat']:.4f}\n")
@@ -747,7 +768,7 @@ class CSVAnalyzer:
             f.write("END OF REPORT\n")
             f.write("="*80 + "\n")
 
-        print(f"  ✓ Saved comprehensive report to: {report_path}")
+        print(f"  [OK] Saved comprehensive report to: {report_path}")
 
     def run_full_analysis(self):
         """
@@ -803,12 +824,12 @@ def main():
         analyzer.run_full_analysis()
 
     except FileNotFoundError as e:
-        print(f"\n❌ ERROR: {e}")
+        print(f"\n[ERROR] ERROR: {e}")
         print("\nPlease run the simulation first:")
         print("  python main.py")
 
     except Exception as e:
-        print(f"\n❌ FATAL ERROR: {e}")
+        print(f"\n[ERROR] FATAL ERROR: {e}")
         import traceback
         traceback.print_exc()
 

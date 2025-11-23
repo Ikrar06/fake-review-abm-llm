@@ -63,9 +63,15 @@ class PublicationFigures:
     - IEEE/Nature/Science compatible
     """
 
-    def __init__(self, results_dir: str = "data/results"):
+    def __init__(self, results_dir: str = None):
+        # Auto-detect project root
+        if results_dir is None:
+            script_dir = Path(__file__).parent
+            project_root = script_dir.parent
+            results_dir = project_root / "data" / "results"
+
         self.results_dir = Path(results_dir)
-        self.output_dir = Path("data/publication")
+        self.output_dir = self.results_dir.parent / "publication"
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
         # PROFESSIONAL COLOR PALETTE (minimal, high contrast)
@@ -589,6 +595,9 @@ class PublicationFigures:
         personas = ['Impulsive', 'Careful', 'Skeptical']
         results = []
 
+        # Attack period = burst + maintenance (iterations >= 4)
+        attack_iterations = list(range(4, 21))
+
         for persona in personas:
             data = detailed_df[
                 (detailed_df['persona'] == persona) &
@@ -596,33 +605,41 @@ class PublicationFigures:
             ]
 
             baseline = data[data['iteration'].isin([1, 2, 3])]
-            burst = data[data['iteration'].isin(self.burst_iterations)]
+            attack = data[data['iteration'].isin(attack_iterations)]
 
             baseline_rate = baseline['purchases'].sum() / baseline['total_evaluations'].sum() * 100
-            burst_rate = burst['purchases'].sum() / burst['total_evaluations'].sum() * 100
+            attack_rate = attack['purchases'].sum() / attack['total_evaluations'].sum() * 100
 
             results.append({
                 'Persona': persona,
                 'Baseline': round(baseline_rate, 1),
-                'Attack': round(burst_rate, 1),
-                'Impact_pp': round(burst_rate - baseline_rate, 1),
-                'n': int(data['total_evaluations'].sum())
+                'Attack': round(attack_rate, 1),
+                'Impact_pp': round(attack_rate - baseline_rate, 1),
+                'n_baseline': int(baseline['total_evaluations'].sum()),
+                'n_attack': int(attack['total_evaluations'].sum())
             })
 
         df = pd.DataFrame(results).sort_values('Impact_pp', ascending=False)
         df['Rank'] = range(1, len(df) + 1)
 
-        # ANOVA
+        # ANOVA using individual decisions (not aggregated rates)
+        # This gives proper sample size for statistical testing
+        attack_data = self.transactions_df[
+            (self.transactions_df['product_id'].isin(self.fake_targets)) &
+            (self.transactions_df['iteration'].isin(attack_iterations))
+        ].copy()
+        attack_data['buy_binary'] = (attack_data['decision'] == 'BUY').astype(int)
+
         groups = []
         for persona in personas:
-            vals = detailed_df[
-                (detailed_df['persona'] == persona) &
-                (detailed_df['product_id'].isin(self.fake_targets)) &
-                (detailed_df['iteration'].isin(self.burst_iterations))
-            ]['conversion_rate'].values
-            groups.append(vals)
+            persona_decisions = attack_data[attack_data['persona'] == persona]['buy_binary'].values
+            groups.append(persona_decisions)
 
         f_stat, p_val = stats.f_oneway(*groups)
+
+        # Print ANOVA details
+        print(f"      ANOVA: F={f_stat:.2f}, p={p_val:.4f}")
+        print(f"      Sample sizes: {[len(g) for g in groups]}")
 
         # CSV
         csv_path = self.output_dir / "Table_3_RQ2.csv"
@@ -633,22 +650,22 @@ class PublicationFigures:
         with open(latex_path, 'w', encoding='utf-8') as f:
             f.write("\\begin{table}[t]\n")
             f.write("\\centering\n")
-            f.write("\\caption{RQ2: Persona vulnerability to fake reviews}\n")
+            f.write("\\caption{RQ2: Persona vulnerability to fake reviews (targeted products only)}\n")
             f.write("\\label{tab:rq2}\n")
             f.write("\\small\n")
-            f.write("\\begin{tabular}{clcccc}\n")
+            f.write("\\begin{tabular}{clccccc}\n")
             f.write("\\toprule\n")
-            f.write("Rank & Persona & Baseline & Attack & Impact (pp) & $n$ \\\\\n")
+            f.write("Rank & Persona & Baseline & Attack & Impact (pp) & $n_{base}$ & $n_{attack}$ \\\\\n")
             f.write("\\midrule\n")
 
             for _, row in df.iterrows():
                 f.write(f"{row['Rank']} & {row['Persona']} & {row['Baseline']}\\% & ")
-                f.write(f"{row['Attack']}\\% & +{row['Impact_pp']} & {row['n']} \\\\\n")
+                f.write(f"{row['Attack']}\\% & +{row['Impact_pp']} & {row['n_baseline']} & {row['n_attack']} \\\\\n")
 
             f.write("\\bottomrule\n")
             p_str = f"{p_val:.4f}" if p_val >= 0.0001 else "$<$0.0001"
             sig = "***" if p_val < 0.001 else "**" if p_val < 0.01 else "*" if p_val < 0.05 else ""
-            f.write(f"\\multicolumn{{6}}{{l}}{{\\scriptsize ANOVA: $F = {f_stat:.2f}$, $p = {p_str}${sig}}}\\\\\n")
+            f.write(f"\\multicolumn{{7}}{{l}}{{\\scriptsize ANOVA: $F = {f_stat:.2f}$, $p = {p_str}${sig}}}\\\\\n")
             f.write("\\end{tabular}\n")
             f.write("\\end{table}\n")
 
