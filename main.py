@@ -63,15 +63,15 @@ def export_results(model: FakeReviewModel, output_dir: str = "data/results"):
     results_df = model.get_results_df()
     metrics_path = f"{output_dir}/model_metrics_{timestamp}.csv"
     results_df.to_csv(metrics_path)
-    print(f"✓ Model metrics: {metrics_path}")
+    print(f"[OK] Model metrics: {metrics_path}")
 
     reviews_path = f"{output_dir}/reviews_{timestamp}.csv"
     model.export_reviews(reviews_path)
-    print(f"✓ Reviews: {reviews_path}")
+    print(f"[OK] Reviews: {reviews_path}")
 
     transactions_path = f"{output_dir}/transactions_{timestamp}.csv"
     model.export_transactions(transactions_path)
-    print(f"✓ Transactions: {transactions_path}")
+    print(f"[OK] Transactions: {transactions_path}")
 
     summary = {
         "total_iterations": model.num_iterations,
@@ -100,7 +100,7 @@ def export_results(model: FakeReviewModel, output_dir: str = "data/results"):
 
     summary_path = f"{output_dir}/summary_{timestamp}.csv"
     pd.Series(summary).to_csv(summary_path, header=['value'])
-    print(f"✓ Summary statistics: {summary_path}")
+    print(f"[OK] Summary statistics: {summary_path}")
 
     return {
         'metrics': metrics_path,
@@ -120,7 +120,7 @@ def print_final_summary(model: FakeReviewModel):
     print("-" * 55)
     for pid in range(1, 6):
         product = model.products[pid]
-        print(f"{product.name:<25} {product.current_rating:>8.2f}★ "
+        print(f"{product.name:<25} {product.current_rating:>8.2f}* "
               f"{product.review_count:>10} {product.fake_count:>8}")
 
     print("\n[PURCHASING BEHAVIOR]")
@@ -160,8 +160,8 @@ def main():
         model = run_simulation(num_iterations=TOTAL_ITERATIONS, seed=42)
         print_final_summary(model)
         export_results(model)
-        print("\n✓ Simulation completed successfully!")
-        print("✓ Results saved to data/results/")
+        print("\n[OK] Simulation completed successfully!")
+        print("[OK] Results saved to data/results/")
         return model
     except KeyboardInterrupt:
         print("\n\nSimulation interrupted by user")

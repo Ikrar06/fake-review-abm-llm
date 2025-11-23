@@ -174,7 +174,7 @@ def get_shopper_prompt(
     reviews_text = ""
     for r in reviews[:12]:
         wave_info = f"[Wave {r['iteration']}] " if 'iteration' in r else ""
-        reviews_text += f"- {wave_info}\"{r['text']}\" ({r['rating']}★)\n"
+        reviews_text += f"- {wave_info}\"{r['text']}\" ({r['rating']}*)\n"
 
     total_reviews = len(reviews)
     recent_reviews = [r for r in reviews if r.get('iteration', 1) >= max(1, iteration - 1)]
@@ -200,16 +200,16 @@ def get_shopper_prompt(
 You shop based on FEELINGS and FIRST IMPRESSIONS. You trust star ratings completely.
 
 ### DECISION RULES (Check in order, use FIRST match):
-1. IF rating < 2.3 → NO_BUY (obviously terrible)
-2. IF rating ≥ 3.8 → BUY (high rating = must be good!)
-3. IF rating ≥ 3.2 → BUY (decent rating, I'll try it)
-4. IF rating ≥ 2.8 AND price ≤ 250,000 → BUY (cheap enough to risk)
-5. IF rating ≥ 2.5 AND positive_count ≥ 8 → BUY (people like it!)
-6. OTHERWISE → NO_BUY
+1. IF rating < 2.3 -> NO_BUY (obviously terrible)
+2. IF rating ≥ 3.8 -> BUY (high rating = must be good!)
+3. IF rating ≥ 3.2 -> BUY (decent rating, I'll try it)
+4. IF rating ≥ 2.8 AND price ≤ 250,000 -> BUY (cheap enough to risk)
+5. IF rating ≥ 2.5 AND positive_count ≥ 8 -> BUY (people like it!)
+6. OTHERWISE -> NO_BUY
 
 ### YOUR MINDSET:
-- You see 3.8+ stars → "Wow looks great!" → BUY
-- You see 3.2+ stars → "Not bad, let's try" → BUY
+- You see 3.8+ stars -> "Wow looks great!" -> BUY
+- You see 3.2+ stars -> "Not bad, let's try" -> BUY
 - You NEVER analyze if reviews are fake
 - You TRUST the rating number completely"""
 
@@ -219,22 +219,22 @@ You shop based on FEELINGS and FIRST IMPRESSIONS. You trust star ratings complet
 You read reviews and consider multiple factors before buying.
 
 ### METRICS YOU SEE:
-- Current Rating: {avg_rating:.1f}★
+- Current Rating: {avg_rating:.1f}*
 - Negative mentions: {negative_count}
 - Positive mentions: {positive_count}
 - Total reviews: {total_reviews}
 
 ### DECISION RULES (Check in order, use FIRST match):
-1. IF rating < 2.5 → NO_BUY (too many problems)
-2. IF negative_count ≥ 7 → NO_BUY (consistent complaints)
-3. IF rating ≥ 4.2 AND total_reviews ≥ 10 → BUY (excellent track record)
-4. IF rating ≥ 3.8 AND negative_count ≤ 3 → BUY (good with few issues)
-5. IF rating ≥ 3.5 AND price ≤ 400,000 AND negative_count ≤ 4 → BUY (good value)
-6. IF rating ≥ 3.2 AND price ≤ 250,000 AND positive_count ≥ 8 → BUY (affordable with good feedback)
-7. IF rating ≥ 3.0 AND price ≤ 150,000 AND positive_count ≥ 10 → BUY (very cheap, people like it)
-8. IF rating < 3.0 → NO_BUY (not good enough)
-9. IF negative_count ≥ 6 → NO_BUY (too many complaints)
-10. OTHERWISE → NO_BUY (not convinced)
+1. IF rating < 2.5 -> NO_BUY (too many problems)
+2. IF negative_count ≥ 7 -> NO_BUY (consistent complaints)
+3. IF rating ≥ 4.2 AND total_reviews ≥ 10 -> BUY (excellent track record)
+4. IF rating ≥ 3.8 AND negative_count ≤ 3 -> BUY (good with few issues)
+5. IF rating ≥ 3.5 AND price ≤ 400,000 AND negative_count ≤ 4 -> BUY (good value)
+6. IF rating ≥ 3.2 AND price ≤ 250,000 AND positive_count ≥ 8 -> BUY (affordable with good feedback)
+7. IF rating ≥ 3.0 AND price ≤ 150,000 AND positive_count ≥ 10 -> BUY (very cheap, people like it)
+8. IF rating < 3.0 -> NO_BUY (not good enough)
+9. IF negative_count ≥ 6 -> NO_BUY (too many complaints)
+10. OTHERWISE -> NO_BUY (not convinced)
 
 IMPORTANT: Apply rules with ACTUAL numbers. Rating 3.0 does NOT satisfy "rating ≥ 3.5"!"""
 
@@ -244,10 +244,10 @@ IMPORTANT: Apply rules with ACTUAL numbers. Rating 3.0 does NOT satisfy "rating 
 You're NOT paranoid - you're SMART. You detect obvious fakes but sometimes get fooled by clever manipulation.
 
 ### CRITICAL METRICS:
-- Current Rating: {avg_rating:.1f}★
-- Old Rating (before wave {max(1, iteration-1)}): {old_avg:.1f}★
+- Current Rating: {avg_rating:.1f}*
+- Old Rating (before wave {max(1, iteration-1)}): {old_avg:.1f}*
 - Rating Jump: {rating_jump:+.2f}
-- Recent 5★ Surge: {recent_five_stars}/{len(recent_reviews)} = {burst_ratio:.0%}
+- Recent 5* Surge: {recent_five_stars}/{len(recent_reviews)} = {burst_ratio:.0%}
 - Negative mentions: {negative_count}
 - Total reviews: {total_reviews}
 - Price: Rp {price:,}
@@ -255,26 +255,26 @@ You're NOT paranoid - you're SMART. You detect obvious fakes but sometimes get f
 ### YOUR ANALYSIS FRAMEWORK:
 
 **STEP 1: Is this product GENUINELY BAD?**
-- IF rating < 2.3 → NO_BUY (clearly poor quality)
-- IF negative_count ≥ 8 → NO_BUY (too many real complaints)
+- IF rating < 2.3 -> NO_BUY (clearly poor quality)
+- IF negative_count ≥ 8 -> NO_BUY (too many real complaints)
 
 **STEP 2: Is this OBVIOUSLY MANIPULATED?**
-- IF burst_ratio ≥ 70% AND rating_jump > 1.0 AND rating < 4.0 → NO_BUY
-- IF rating < 2.5 AND rating_jump > 1.2 → NO_BUY
+- IF burst_ratio ≥ 70% AND rating_jump > 1.0 AND rating < 4.0 -> NO_BUY
+- IF rating < 2.5 AND rating_jump > 1.2 -> NO_BUY
 
 **STEP 3: Is this GENUINELY GOOD?**
-- IF rating ≥ 4.4 AND negative_count ≤ 3 → BUY
-- IF rating ≥ 4.2 AND negative_count ≤ 4 AND burst_ratio < 60% → BUY
-- IF rating ≥ 3.9 AND price > 350,000 AND negative_count ≤ 4 → BUY
+- IF rating ≥ 4.4 AND negative_count ≤ 3 -> BUY
+- IF rating ≥ 4.2 AND negative_count ≤ 4 AND burst_ratio < 60% -> BUY
+- IF rating ≥ 3.9 AND price > 350,000 AND negative_count ≤ 4 -> BUY
 
 **STEP 4: MODERATE QUALITY - Worth the risk?**
-- IF rating ≥ 3.7 AND negative_count ≤ 3 AND burst_ratio < 60% → BUY
-- IF rating ≥ 3.4 AND price ≤ 250,000 AND negative_count ≤ 4 AND burst_ratio < 65% → BUY
-- IF rating ≥ 3.2 AND price ≤ 200,000 AND positive_count ≥ 12 → BUY
+- IF rating ≥ 3.7 AND negative_count ≤ 3 AND burst_ratio < 60% -> BUY
+- IF rating ≥ 3.4 AND price ≤ 250,000 AND negative_count ≤ 4 AND burst_ratio < 65% -> BUY
+- IF rating ≥ 3.2 AND price ≤ 200,000 AND positive_count ≥ 12 -> BUY
 
 **STEP 5: BORDERLINE CASES**
-- IF rating ≥ 3.0 AND price ≤ 150,000 AND positive_count ≥ 15 AND total_reviews ≥ 50 → BUY
-- IF rating ≥ 2.9 AND price ≤ 180,000 AND positive_count ≥ 18 AND burst_ratio < 70% → BUY
+- IF rating ≥ 3.0 AND price ≤ 150,000 AND positive_count ≥ 15 AND total_reviews ≥ 50 -> BUY
+- IF rating ≥ 2.9 AND price ≤ 180,000 AND positive_count ≥ 18 AND burst_ratio < 70% -> BUY
 
 **DEFAULT: NO_BUY**"""
 
@@ -284,14 +284,14 @@ You're NOT paranoid - you're SMART. You detect obvious fakes but sometimes get f
 
 ## PRODUCT: {product_name}
 - Price: Rp {price:,}
-- Current Rating: {avg_rating:.1f}★
+- Current Rating: {avg_rating:.1f}*
 - Total Reviews: {total_reviews}
 
 ## SUSPICIOUS ACTIVITY CHECK:
-- Old Rating: {old_avg:.1f}★
-- Rating Jump: {rating_jump:+.2f} {"⚠️ SUSPICIOUS" if rating_jump > 0.7 else "✓ Normal"}
-- Recent 5★ Surge: {burst_ratio:.0%} {"⚠️ SUSPICIOUS" if burst_ratio >= 0.6 else "✓ Normal"}
-- Negative Count: {negative_count} {"⚠️ HIGH" if negative_count >= 6 else "✓ Low"}
+- Old Rating: {old_avg:.1f}*
+- Rating Jump: {rating_jump:+.2f} {"[WARN] SUSPICIOUS" if rating_jump > 0.7 else "[OK] Normal"}
+- Recent 5* Surge: {burst_ratio:.0%} {"[WARN] SUSPICIOUS" if burst_ratio >= 0.6 else "[OK] Normal"}
+- Negative Count: {negative_count} {"[WARN] HIGH" if negative_count >= 6 else "[OK] Low"}
 
 {rules}
 
@@ -312,7 +312,7 @@ Output ONLY JSON:
 
 ## PRODUCT: {product_name}
 - Price: Rp {price:,}
-- Rating: {avg_rating:.1f}★
+- Rating: {avg_rating:.1f}*
 - Total Reviews: {total_reviews}
 
 ## REVIEW ANALYSIS:
@@ -338,7 +338,7 @@ Output ONLY JSON:
 
 ## PRODUCT: {product_name}
 - Price: Rp {price:,}
-- Rating: {avg_rating:.1f}★
+- Rating: {avg_rating:.1f}*
 - Reviews: {total_reviews}
 
 {rules}

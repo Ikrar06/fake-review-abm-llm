@@ -2,7 +2,7 @@
 COMPREHENSIVE ANALYSIS REPORT
 Fake Review ABM Simulation - MESA Framework
 ================================================================================
-Generated: 2025-11-22 01:25:17
+Generated: 2025-11-23 21:18:50
 ================================================================================
 
 DATASET SUMMARY
@@ -32,9 +32,9 @@ Absolute Increase:         +54.17%
 Relative Increase:         + 0.00%
 
 Statistical Test (Chi-Square):
-  χ² = 121.2971
+  X^2 = 121.2971
   p-value = 0.000000
-  Cramér's V = 0.636
+  Cramer's V = 0.636
   Statistically Significant: YES
   Sample Sizes: Baseline=180, Burst=120
 
@@ -49,9 +49,9 @@ Absolute Increase:         +71.67%
 Relative Increase:         + 0.00%
 
 Statistical Test (Chi-Square):
-  χ² = 177.3534
+  X^2 = 177.3534
   p-value = 0.000000
-  Cramér's V = 0.769
+  Cramer's V = 0.769
   Statistically Significant: YES
   Sample Sizes: Baseline=180, Burst=120
 
@@ -60,15 +60,15 @@ Statistical Test (Chi-Square):
 RQ2: PERSONA VULNERABILITY TO FAKE REVIEWS
 ================================================================================
 
-Vulnerability Ranking (Impact during burst on targeted products):
+Vulnerability Ranking (Impact during attack on targeted products):
 --------------------------------------------------------------------------------
-1. Impulsive    Impact: + 75.00% (Baseline: 0.0% → Burst: 75.0%)
-2. Careful      Impact: + 72.50% (Baseline: 0.0% → Burst: 72.5%)
-3. Skeptical    Impact: + 41.25% (Baseline: 0.0% → Burst: 41.2%)
+1. Careful      Impact: + 95.00pp (Baseline: 0.0% -> Attack: 95.0%)
+2. Impulsive    Impact: + 92.50pp (Baseline: 0.0% -> Attack: 92.5%)
+3. Skeptical    Impact: + 40.44pp (Baseline: 0.0% -> Attack: 40.4%)
 
 ANOVA Test:
-  F-statistic = 13.3203
-  p-value = 0.000003
+  F-statistic = 540.2799
+  p-value = 0.000000
   Significant difference between personas: YES
 
 

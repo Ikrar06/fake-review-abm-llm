@@ -73,7 +73,7 @@ class FakeReviewModel(Model):
         self.iteration_stats = {}
         self.datacollector = DataCollector(model_reporters=self._get_model_reporters())
 
-        print("✓ MESA Model Initialized")
+        print("[OK] MESA Model Initialized")
 
     def _init_products(self) -> Dict[int, Product]:
         products_data = [
@@ -147,13 +147,13 @@ class FakeReviewModel(Model):
                     review_count += 1
                     pbar.update(1)
 
-        print(f"  ✓ Generated {review_count} genuine reviews")
+        print(f"  [OK] Generated {review_count} genuine reviews")
 
         if self.current_iteration in BURST_ITERATIONS:
-            print(f"\n  ⚡ BURST ATTACK DETECTED!")
+            print(f"\n  [BURST] BURST ATTACK DETECTED!")
             self._inject_burst_fakes()
         elif self.current_iteration > max(BURST_ITERATIONS):
-            print(f"\n  ⚙️ MAINTENANCE MODE")
+            print(f"\n  [MAINT]️ MAINTENANCE MODE")
             self._inject_maintenance_fakes()
 
     def _inject_burst_fakes(self):
@@ -185,7 +185,7 @@ class FakeReviewModel(Model):
                     fake_count += 1
                     pbar.update(1)
 
-        print(f"  ⚡ {fake_count} fake reviews injected")
+        print(f"  [BURST] {fake_count} fake reviews injected")
         for target_id in FAKE_CAMPAIGN_TARGETS:
             product = self.products[target_id]
             print(f"    {product.name}: {product.current_rating:.2f} stars")
@@ -239,9 +239,9 @@ class FakeReviewModel(Model):
                     pbar.update(1)
 
                 new_rating = product.current_rating
-                print(f"    {product.name} [{intensity}]: {old_rating:.2f} → {new_rating:.2f}")
+                print(f"    {product.name} [{intensity}]: {old_rating:.2f} -> {new_rating:.2f}")
 
-        print(f"  ⚡ {fake_count} maintenance fakes injected")
+        print(f"  [BURST] {fake_count} maintenance fakes injected")
 
     def _shopping_phase(self):
         print(f"\n[PHASE 2] Shopping Decisions")
@@ -308,7 +308,7 @@ class FakeReviewModel(Model):
         print("-" * 70)
         for pid in range(1, 6):
             product = self.products[pid]
-            print(f"  {product.name:25} {product.current_rating:5.2f}★ "
+            print(f"  {product.name:25} {product.current_rating:5.2f}* "
                   f"({product.review_count:3} reviews, {product.fake_count:2} fake)")
 
     def run(self):

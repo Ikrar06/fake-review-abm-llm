@@ -1,4 +1,4 @@
-persona,baseline_conversion_%,burst_conversion_%,impact_%,sample_size
-Impulsive,0.0,75.0,75.0,800
-Careful,0.0,72.5,72.5,800
-Skeptical,0.0,41.25,41.25,800
+persona,baseline_conversion_%,attack_conversion_%,impact_%,n_baseline,n_attack
+Careful,0.0,95.0,95.0,120,680
+Impulsive,0.0,92.5,92.5,120,680
+Skeptical,0.0,40.44,40.44,120,680

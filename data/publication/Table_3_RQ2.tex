@@ -1,16 +1,16 @@
 \begin{table}[t]
 \centering
-\caption{RQ2: Persona vulnerability to fake reviews}
+\caption{RQ2: Persona vulnerability to fake reviews (targeted products only)}
 \label{tab:rq2}
 \small
-\begin{tabular}{clcccc}
+\begin{tabular}{clccccc}
 \toprule
-Rank & Persona & Baseline & Attack & Impact (pp) & $n$ \\
+Rank & Persona & Baseline & Attack & Impact (pp) & $n_{base}$ & $n_{attack}$ \\
 \midrule
-1 & Impulsive & 0.0\% & 75.0\% & +75.0 & 800 \\
-2 & Careful & 0.0\% & 72.5\% & +72.5 & 800 \\
-3 & Skeptical & 0.0\% & 41.2\% & +41.2 & 800 \\
+1 & Careful & 0.0\% & 95.0\% & +95.0 & 120 & 680 \\
+2 & Impulsive & 0.0\% & 92.5\% & +92.5 & 120 & 680 \\
+3 & Skeptical & 0.0\% & 40.4\% & +40.4 & 120 & 680 \\
 \bottomrule
-\multicolumn{6}{l}{\scriptsize ANOVA: $F = 0.86$, $p = 0.4539$}\\
+\multicolumn{7}{l}{\scriptsize ANOVA: $F = 540.28$, $p = $<$0.0001$***}\\
 \end{tabular}
 \end{table}

@@ -1,4 +1,4 @@
-Persona,Baseline,Attack,Impact_pp,n,Rank
-Impulsive,0.0,75.0,75.0,800,1
-Careful,0.0,72.5,72.5,800,2
-Skeptical,0.0,41.2,41.2,800,3
+Persona,Baseline,Attack,Impact_pp,n_baseline,n_attack,Rank
+Careful,0.0,95.0,95.0,120,680,1
+Impulsive,0.0,92.5,92.5,120,680,2
+Skeptical,0.0,40.4,40.4,120,680,3
