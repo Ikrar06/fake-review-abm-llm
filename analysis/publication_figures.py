@@ -359,6 +359,9 @@ class PublicationFigures:
         personas = ['Impulsive', 'Careful', 'Skeptical']
         impacts = []
 
+        # Use full attack period (4-20) to match Table 3 RQ2
+        attack_iterations = list(range(4, 21))
+
         for persona in personas:
             data = detailed_df[
                 (detailed_df['persona'] == persona) &
@@ -366,12 +369,12 @@ class PublicationFigures:
             ]
 
             baseline = data[data['iteration'].isin([1, 2, 3])]
-            burst = data[data['iteration'].isin(self.burst_iterations)]
+            attack = data[data['iteration'].isin(attack_iterations)]
 
             baseline_rate = baseline['purchases'].sum() / baseline['total_evaluations'].sum() * 100
-            burst_rate = burst['purchases'].sum() / burst['total_evaluations'].sum() * 100
+            attack_rate = attack['purchases'].sum() / attack['total_evaluations'].sum() * 100
 
-            impacts.append(burst_rate - baseline_rate)
+            impacts.append(attack_rate - baseline_rate)
 
         df = pd.DataFrame({'persona': personas, 'impact': impacts})
         df = df.sort_values('impact', ascending=True)
