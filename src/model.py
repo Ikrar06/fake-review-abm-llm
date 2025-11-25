@@ -1,7 +1,6 @@
 # model.py - MESA Simulation Model
 
 from mesa import Model
-from mesa.time import RandomActivation
 from mesa.datacollection import DataCollector
 from dataclasses import dataclass, field
 import random
@@ -65,8 +64,6 @@ class FakeReviewModel(Model):
 
         self.num_iterations = num_iterations
         self.current_iteration = 0
-        self.reviewer_schedule = RandomActivation(self)
-        self.shopper_schedule = RandomActivation(self)
         self.products = self._init_products()
         self.all_reviews = []
         self.all_transactions = []
