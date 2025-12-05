@@ -219,4 +219,6 @@ Educational/Research use only.
 
 ## Author
 
-Ikrar & Irgi - 2025
+Ikrar Gempur Tirani - D121231015
+Muhammad Irgi Abayl Marzuku - D121231102
+Ahnaf Fauzan Zaki - D121231033
